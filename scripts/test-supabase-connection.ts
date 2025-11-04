@@ -38,8 +38,10 @@ async function testSupabaseConnection() {
 
   // Test 1: List buckets
   console.log('📦 Test 1: Listing storage buckets...');
+  let buckets: any[] | null = null;
   try {
-    const { data: buckets, error } = await supabase.storage.listBuckets();
+    const { data, error } = await supabase.storage.listBuckets();
+    buckets = data;
 
     if (error) {
       console.error('❌ Error listing buckets:', error.message);
