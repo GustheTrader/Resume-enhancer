@@ -7,7 +7,7 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 - **Multi-Provider AI Support**: Use OpenAI, Anthropic, or Google Gemini models
 - **ATS Optimization**: Improve resume compatibility with Applicant Tracking Systems
 - **Smart Enhancement**: Action verbs, keyword optimization, grammar checks, and formatting
-- **Secure Storage**: AWS S3 integration for secure file storage
+- **Secure Storage**: Supabase Storage for secure file storage
 - **User Management**: Full authentication with NextAuth
 - **API Key Management**: Encrypted storage of user API keys
 
@@ -15,17 +15,16 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL (Supabase)
+- **Storage**: Supabase Storage
 - **Authentication**: NextAuth.js
-- **Storage**: AWS S3
 - **Styling**: Tailwind CSS + shadcn/ui
 - **AI Integration**: OpenAI, Anthropic, Google Gemini
 
 ## Prerequisites
 
 - Node.js 18+ and npm/yarn
-- PostgreSQL database
-- AWS account (for S3 storage)
+- Supabase account (includes PostgreSQL database and storage)
 - API keys for AI providers (optional - users can add their own)
 
 ## Local Development Setup
@@ -49,9 +48,10 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
    ```
 
    Edit `.env` and fill in your values:
-   - `DATABASE_URL`: PostgreSQL connection string
+   - `DATABASE_URL`: Supabase PostgreSQL connection string
    - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
-   - AWS credentials for S3 storage
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
    - API keys (optional)
 
 4. **Set up the database**
@@ -69,6 +69,30 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
    ```
 
 6. **Open [http://localhost:3000](http://localhost:3000)**
+
+## Setting Up Supabase
+
+1. **Create a Supabase Project**
+   - Go to [supabase.com](https://supabase.com) and create an account
+   - Click "New Project"
+   - Enter project details and create your project
+
+2. **Get Your Connection Credentials**
+   - Go to Project Settings > Database
+   - Copy the "Connection String" (URI mode)
+   - Go to Project Settings > API
+   - Copy the "URL" for `NEXT_PUBLIC_SUPABASE_URL`
+   - Copy the "service_role" key for `SUPABASE_SERVICE_ROLE_KEY`
+
+3. **Create Storage Bucket**
+   - Go to Storage in the Supabase dashboard
+   - Click "Create a new bucket"
+   - Name it `resumes`
+   - Set it as **private** (not public)
+   - Click "Create bucket"
+
+4. **Set Up Bucket Policies (Optional)**
+   If you want fine-grained access control, you can set up Row Level Security policies on the storage bucket through the Supabase SQL editor.
 
 ## Deploying to Vercel
 
@@ -95,17 +119,13 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
    Go to Project Settings → Environment Variables and add:
 
    **Required:**
-   - `DATABASE_URL` - Your PostgreSQL connection string (use Vercel Postgres or external provider)
+   - `DATABASE_URL` - Your Supabase PostgreSQL connection string
    - `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
    - `NEXTAUTH_URL` - Your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
 
-   **AWS S3 Storage:**
-   - `AWS_REGION` - e.g., `us-west-2`
-   - `AWS_BUCKET_NAME` - Your S3 bucket name
-   - `AWS_FOLDER_PREFIX` - Folder prefix in S3 (e.g., `resumes/`)
-   - `AWS_ACCESS_KEY_ID` - Your AWS access key
-   - `AWS_SECRET_ACCESS_KEY` - Your AWS secret key
-   - `AWS_PROFILE` - e.g., `hosted_storage` (optional)
+   **Supabase Configuration:**
+   - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL (from Project Settings > API)
+   - `SUPABASE_SERVICE_ROLE_KEY` - Your service role key (from Project Settings > API)
 
    **Optional (if providing default API keys):**
    - `ABACUSAI_API_KEY` - AbacusAI API key
@@ -140,14 +160,11 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
+| `DATABASE_URL` | Supabase PostgreSQL connection string | `postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres` |
 | `NEXTAUTH_SECRET` | Secret for NextAuth sessions | Generate with `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Your application URL | `https://your-app.vercel.app` |
-| `AWS_REGION` | AWS region for S3 | `us-west-2` |
-| `AWS_BUCKET_NAME` | S3 bucket name | `my-resume-bucket` |
-| `AWS_FOLDER_PREFIX` | S3 folder prefix | `resumes/` |
-| `AWS_ACCESS_KEY_ID` | AWS access key | Your AWS access key |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Your AWS secret key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | `https://[PROJECT-REF].supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Get from Supabase Project Settings > API |
 
 ### Optional
 
@@ -184,7 +201,7 @@ The application uses Prisma with PostgreSQL. Key models:
 
 - All API keys are encrypted before storage
 - NextAuth handles secure authentication
-- AWS S3 provides secure file storage
+- Supabase provides secure file storage with Row Level Security (RLS)
 - Environment variables protect sensitive data
 - `.env` files are gitignored
 
@@ -199,15 +216,16 @@ If you encounter build errors:
 
 ### Database Connection Issues
 
-- Ensure your PostgreSQL instance allows connections from Vercel IPs
-- For Vercel Postgres, connection pooling is automatic
-- For external databases, you may need to enable connection pooling
+- Ensure your Supabase project is active
+- Check that the connection string includes the correct password
+- Supabase automatically handles connection pooling
 
-### S3 Upload Issues
+### Storage Upload Issues
 
-- Verify AWS credentials have proper S3 permissions
-- Check bucket CORS configuration if needed
-- Ensure bucket exists and is accessible
+- Verify the `resumes` bucket exists in Supabase Storage
+- Check that the service role key has proper permissions
+- Ensure bucket policies allow file uploads
+- Run the bucket initialization if needed (see setup instructions)
 
 ## Support
 
