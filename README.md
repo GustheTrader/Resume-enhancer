@@ -5,6 +5,7 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 ## Features
 
 - **Multi-Provider AI Support**: Use OpenAI, Anthropic, or Google Gemini models
+- **OCR for Scanned PDFs**: Automatically extract text from image-based/scanned PDFs using Google Gemini Vision
 - **ATS Optimization**: Improve resume compatibility with Applicant Tracking Systems
 - **Smart Enhancement**: Action verbs, keyword optimization, grammar checks, and formatting
 - **Secure Storage**: Supabase Storage for secure file storage
@@ -25,7 +26,8 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 
 - Node.js 18+ and npm/yarn
 - Supabase account (includes PostgreSQL database and storage)
-- API keys for AI providers (optional - users can add their own)
+- Google API key (for OCR on scanned PDFs and Gemini LLM)
+- API keys for other AI providers (optional - users can add their own)
 
 ## Local Development Setup
 
@@ -52,7 +54,10 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
    - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
    - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
    - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
-   - API keys (optional)
+   - `GOOGLE_API_KEY`: Required for OCR on scanned PDFs
+   - Other API keys (optional)
+
+   📖 **See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed Supabase configuration**
 
 4. **Set up the database**
    ```bash
@@ -127,9 +132,12 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
    - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL (from Project Settings > API)
    - `SUPABASE_SERVICE_ROLE_KEY` - Your service role key (from Project Settings > API)
 
-   **Optional (if providing default API keys):**
-   - `ABACUSAI_API_KEY` - AbacusAI API key
-   - Users can also add their own API keys through the app interface
+   **Google API (Required for OCR):**
+   - `GOOGLE_API_KEY` - Google AI API key for OCR on scanned PDFs and Gemini LLM
+
+   **Optional:**
+   - `ABACUSAI_API_KEY` - AbacusAI API key for LLM fallback
+   - Users can also add their own OpenAI/Anthropic/Gemini keys through the app Settings page
 
 4. **Database Setup on Vercel**
 
@@ -165,12 +173,13 @@ AI-powered resume enhancement tool to boost your career prospects with ATS optim
 | `NEXTAUTH_URL` | Your application URL | `https://your-app.vercel.app` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | `https://[PROJECT-REF].supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Get from Supabase Project Settings > API |
+| `GOOGLE_API_KEY` | Google AI API key (for OCR + Gemini) | Get from https://makersuite.google.com/app/apikey |
 
 ### Optional
 
 | Variable | Description |
 |----------|-------------|
-| `ABACUSAI_API_KEY` | AbacusAI API key for AI features |
+| `ABACUSAI_API_KEY` | AbacusAI API key for LLM fallback |
 
 **Note**: Users can configure their own OpenAI, Anthropic, and Google API keys through the app's settings page. These are encrypted and stored in the database.
 
@@ -186,11 +195,18 @@ The application uses Prisma with PostgreSQL. Key models:
 ## Features Overview
 
 ### For Users
-- Upload resumes (PDF, DOCX)
+- Upload resumes (PDF, DOCX, DOC)
+- **Automatic OCR** for scanned/image-based PDFs
 - AI-powered enhancement with multiple strategies
 - Download enhanced resumes
 - Manage personal API keys securely
 - View enhancement history
+
+### OCR Capabilities
+- Automatically detects if a PDF is text-based or image-based
+- Falls back to Google Gemini Vision OCR for scanned PDFs
+- Supports scanned documents, photos of resumes, and image-based PDFs
+- Extracts text while preserving structure and formatting
 
 ### For Administrators
 - User management

@@ -2,6 +2,7 @@ import mammoth from 'mammoth';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { extractTextWithOCR } from './ocr';
 
 // Simple PDF text extractor using pdf2json
 async function extractPdfText(buffer: Buffer): Promise<string> {
@@ -125,58 +126,76 @@ export async function parseDocFile(buffer: Buffer): Promise<string> {
 export async function parsePdfFile(buffer: Buffer): Promise<string> {
   try {
     console.log('Attempting PDF text extraction...');
-    
+
     // Validate buffer
     if (!buffer || buffer.length === 0) {
       throw new Error('Invalid PDF buffer');
     }
-    
+
     console.log(`Processing PDF buffer of size: ${buffer.length} bytes`);
-    
-    // Extract text using pdf2json
-    let text = await extractPdfText(buffer);
-    
-    // Check if we got any text
-    if (!text || text.trim().length === 0) {
-      console.error('PDF text extraction returned empty result');
-      throw new Error('This PDF appears to be image-based or scanned. Please upload a text-based PDF or convert it using OCR first.');
+
+    let text = '';
+    let usedOCR = false;
+
+    try {
+      // Try regular text extraction first using pdf2json
+      text = await extractPdfText(buffer);
+
+      // Check if we got meaningful text
+      if (!text || text.trim().length < 50) {
+        console.log('Regular text extraction returned insufficient content, trying OCR...');
+        throw new Error('Insufficient text extracted, will try OCR');
+      }
+
+      console.log(`Regular extraction successful: ${text.length} characters`);
+    } catch (extractError: any) {
+      // If regular extraction fails, try OCR
+      console.log('Regular text extraction failed, attempting OCR...');
+
+      try {
+        text = await extractTextWithOCR(buffer);
+        usedOCR = true;
+        console.log(`OCR extraction successful: ${text.length} characters`);
+      } catch (ocrError: any) {
+        console.error('OCR extraction also failed:', ocrError);
+        throw new Error(
+          'Failed to extract text from PDF. This may be a scanned/image-based PDF. ' +
+          'OCR extraction failed: ' + (ocrError?.message || 'Unknown error')
+        );
+      }
     }
-    
-    console.log(`Initial extraction: ${text.length} characters`);
-    
+
     // Clean up the extracted text
     // 1. Remove excessive whitespace
     text = text.replace(/[ \t]+/g, ' '); // Multiple spaces/tabs to single space
     text = text.replace(/\n{3,}/g, '\n\n'); // Multiple newlines to max 2
     text = text.trim();
-    
+
     // 2. Check minimum content threshold
     if (text.length < 50) {
       throw new Error('PDF content too short after cleaning. Please ensure the PDF contains readable text content.');
     }
-    
+
     // 3. Limit total size (max ~100k characters for safety)
     if (text.length > 100000) {
       console.warn(`PDF text too long (${text.length} chars), truncating to 100k chars`);
       text = text.substring(0, 100000) + '\n\n[Content truncated due to size]';
     }
-    
-    console.log(`PDF parsing successful. Final text length: ${text.length} characters`);
-    
+
+    console.log(`PDF parsing successful${usedOCR ? ' (using OCR)' : ''}. Final text length: ${text.length} characters`);
+
     return text;
   } catch (error: any) {
     console.error('Error parsing PDF file:', error);
     const errorMessage = error?.message || 'Unknown error';
-    
+
     // Provide specific error messages
     if (errorMessage.includes('encrypted') || errorMessage.includes('password')) {
       throw new Error('This PDF is encrypted or password-protected. Please upload an unencrypted PDF.');
     } else if (errorMessage.includes('ENOENT') || errorMessage.includes('no such file')) {
       throw new Error('Could not process PDF. The file may be corrupted.');
-    } else if (errorMessage.includes('image-based') || errorMessage.includes('scanned')) {
-      throw new Error(errorMessage);
     }
-    
+
     // Generic error with details
     throw new Error(`Failed to parse PDF: ${errorMessage}`);
   }
