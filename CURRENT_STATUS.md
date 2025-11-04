@@ -81,17 +81,33 @@ https://supabase.com/dashboard/project/rsaybetloqjuzsqjwpmz/storage/buckets
 
 ## 🚀 Ready for Vercel Deployment
 
-Once local testing works, you can deploy to Vercel:
+✅ **All code is pushed to GitHub and ready to deploy!**
 
-###Step 1: Push to GitHub
+### ⚠️ IMPORTANT: Deploy from Correct Branch
+
+**Your code is on**: `claude/review-and-vercel-deploy-011CUmvr5VnH4tGu5az1HmJh`
+
+If Vercel is already set up and deploying from `main` branch:
+
+**Quick Fix** (2 minutes):
+1. Go to Vercel → Project Settings → Git
+2. Change "Production Branch" from `main` to `claude/review-and-vercel-deploy-011CUmvr5VnH4tGu5az1HmJh`
+3. Save and redeploy
+
+**OR** create a PR to merge the deployment branch into main.
+
+---
+
+### Step 1: Push to GitHub ✅
 All code is already pushed to:
 - Branch: `claude/review-and-vercel-deploy-011CUmvr5VnH4tGu5az1HmJh`
+- Status: Up to date with remote ✅
 
-### Step 2: Import to Vercel
+### Step 2: Import to Vercel (if new project)
 1. Go to https://vercel.com
 2. Click "Add New Project"
 3. Import from GitHub: `GustheTrader/Resume-enhancer`
-4. Select branch: `claude/review-and-vercel-deploy-011CUmvr5VnH4tGu5az1HmJh`
+4. **Important**: Select branch: `claude/review-and-vercel-deploy-011CUmvr5VnH4tGu5az1HmJh`
 
 ### Step 3: Add Environment Variables in Vercel
 
