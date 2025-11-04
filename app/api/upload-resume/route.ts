@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { uploadFile } from "@/lib/s3";
+import { uploadFile } from "@/lib/supabase-storage";
 import { parseDocxFile, parseDocFile, parsePdfFile } from "@/lib/document-parser";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Upload to S3
+    // Upload to Supabase Storage
     const cloudStoragePath = await uploadFile(buffer, file.name);
 
     // Parse document content
